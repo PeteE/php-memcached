@@ -117,13 +117,14 @@ typedef unsigned long int uint32_t;
 #define MEMC_VAL_GET_TYPE(flags)         ((flags) & MEMC_VAL_TYPE_MASK)
 #define MEMC_VAL_SET_TYPE(flags, type)   ((flags) |= ((type) & MEMC_VAL_TYPE_MASK))
 
-#define MEMC_VAL_IS_STRING     0
-#define MEMC_VAL_IS_LONG       1
-#define MEMC_VAL_IS_DOUBLE     2
-#define MEMC_VAL_IS_BOOL       3
-#define MEMC_VAL_IS_SERIALIZED 4
-#define MEMC_VAL_IS_IGBINARY   5
-#define MEMC_VAL_IS_JSON       6
+#define MEMC_VAL_IS_STRING       0
+#define MEMC_VAL_IS_LONG         1
+#define MEMC_VAL_IS_ENYIM_STRING 2
+#define MEMC_VAL_IS_BOOL         3
+#define MEMC_VAL_IS_SERIALIZED   4
+#define MEMC_VAL_IS_IGBINARY     5
+#define MEMC_VAL_IS_JSON         6
+#define MEMC_VAL_IS_DOUBLE       7
 
 #define MEMC_VAL_COMPRESSED    (1<<4)
 #define MEMC_VAL_COMPRESSION_ZLIB    (1<<5)
@@ -2974,7 +2975,8 @@ static int php_memc_zval_from_payload(zval *value, char *payload, size_t payload
 		return 0;
 	}
 
-	if (flags & MEMC_VAL_COMPRESSED) {
+	int type = MEMC_VAL_GET_TYPE(flags);
+	if (flags & MEMC_VAL_COMPRESSED && type != MEMC_VAL_IS_ENYIM_STRING) {
 		uint32_t len;
 		unsigned long length;
 		zend_bool decompress_status = 0;
@@ -3024,7 +3026,8 @@ static int php_memc_zval_from_payload(zval *value, char *payload, size_t payload
 
 	payload[payload_len] = 0;
 
-	switch (MEMC_VAL_GET_TYPE(flags)) {
+	switch (type) {
+		case MEMC_VAL_IS_ENYIM_STRING:
 		case MEMC_VAL_IS_STRING:
 			if (payload_emalloc) {
 				ZVAL_STRINGL(value, payload, payload_len, 0);
